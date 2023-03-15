@@ -18,9 +18,30 @@
   flex: 1;
 }
 
+.table th {
+  padding: 0.5rem;
+}
+
 html {
   position: relative;
   min-height: 100%;
+  height: -webkit-fill-available;
+}
+
+body {
+  min-height: 0;
+}
+
+#root {
+  min-height: 0;
+}
+
+main {
+  min-height: 0;
+}
+
+.container.card.flex-1 {
+  min-height: 0;
 }
 
 .container-sm {

@@ -1,12 +1,24 @@
 import { CSSProperties } from 'react';
+import { Link } from 'react-router-dom';
 
 export const Logo = (props: {
   style?: CSSProperties,
   textStyle?: CSSProperties,
   scale?: number,
+  link?: boolean,
 }) => {
-  const { style, textStyle } = props;
+  const { style, textStyle, link } = props;
   let scale = props.scale || 1;
+
+  const icon = (
+    <img
+      src='icon.png'
+      style={{
+        width: scale * 4 + 'rem',
+        height: scale * 4 + 'rem',
+      }}
+    />
+  );
 
   return (
     <div
@@ -22,14 +34,14 @@ export const Logo = (props: {
           alignItems: 'center',
         }}
       >
-        <img
-          src='icon.png'
-          style={{
-            width: scale * 4 + 'rem',
-            height: scale * 4 + 'rem',
-          }}
-        />
-
+        {
+          link ? (
+            <Link to='/'>
+              {icon}
+            </Link>
+          ) : icon
+        }
+        
         <span
           style={{
             fontWeight: 'bold',

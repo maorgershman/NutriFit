@@ -1,11 +1,13 @@
 import { useState, useEffect, useContext } from 'react';
-import { BrowserRouter, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
+
+import { Logo } from './Logo';
 
 import { Context, ContextProvider } from './Context';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
-import { Logo } from './Logo';
+import { Foods } from './pages/Foods';
 
 const fbAuth = getAuth();
 
@@ -17,6 +19,7 @@ export const App = () => {
           <Route path='/' element={<AppWithContextAndRoutes />}>
             <Route index element={<Home />} />
             <Route path='login' element={<Login />} />
+            <Route path='foods' element={<Foods />} />
             
             <Route path='*' element={<Navigate replace to='/' />} />
           </Route>
@@ -29,6 +32,7 @@ export const App = () => {
 const AppWithContextAndRoutes = () => {
   const [isReady, setReady] = useState(false);
   const { auth, setAuth } = useContext(Context);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,7 +54,12 @@ const AppWithContextAndRoutes = () => {
         uid: user.uid,
         profilePictureURL: user.photoURL || '',
       });
-      navigate('/', { replace: true });
+
+      console.log('Set auth...');
+      if (document.location.pathname === '/login') {
+        console.log('Navigating to /....');
+        navigate('/', { replace: true });
+      }
     });
     
     return () => {
@@ -81,7 +90,14 @@ const AppWithContextAndRoutes = () => {
     <>
       <Navbar />
 
-      <main className='flex'>
+      <main 
+        className='container flex'
+        style={{
+          alignItems: 'center',
+          marginTop: '2rem',
+          marginBottom: '2rem',
+        }}
+      >
         <Outlet />
       </main>
     </>
@@ -92,10 +108,8 @@ const Navbar = () => {
   const scale = 1;
   const imgSize = scale * 4 + 'rem';
 
-  const { auth } = useContext(Context);
-  if (!auth) {
-    return null;
-  }
+  const ctx = useContext(Context);
+  const auth = ctx.auth!;
 
   return (
     <nav
@@ -113,15 +127,15 @@ const Navbar = () => {
           padding: '1rem',
         }}
       >
-        <Logo scale={scale} textStyle={{ marginTop: 0 }} />
+        <Logo link scale={scale} textStyle={{ marginTop: 0 }} />
         <div className='flex-1' />
         
         <div className='dropdown'>
           <img
             className='dropdown-toggle'
             data-bs-toggle='dropdown'
-            aria-expanded='false'
             src={auth.profilePictureURL}
+            alt=''
             style={{
               width: imgSize,
               height: imgSize,

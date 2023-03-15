@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 
 import { getAuth } from 'firebase/auth';
+import { Link } from 'react-router-dom';
 
 const fbAuth = getAuth();
 export const Home = () => {
@@ -10,13 +11,10 @@ export const Home = () => {
   
   return (
     <>
-      <div
-        className='container flex'
-        style={{
-          alignItems: 'center'
-        }}
-      >
-        
+      <div>
+        <Link to={'/foods'}>
+          Foods
+        </Link>
       </div>
     </>
   );
