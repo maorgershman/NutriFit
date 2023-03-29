@@ -5,7 +5,7 @@ import './style.css';
 import './firebase';
 
 import { createRoot } from 'react-dom/client';
-import { App } from './App';
+import { Root } from './App';
 
 const root = createRoot(document.getElementById('root') as HTMLElement);
-root.render(<App/ >);
+root.render(<Root />);

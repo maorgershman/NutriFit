@@ -1,3 +1,26 @@
+html, body, #root, main {
+  display: flex;
+  flex-direction: column;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .flex {
   display: flex;
   flex-direction: column;
@@ -22,7 +45,40 @@
   padding: 0.5rem;
 }
 
-html {
+ul {
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+
+.btn-like {
+  color: white;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.btn-like:active > .btn-like-to-be-styled {
+  text-decoration: underline;
+}
+
+@keyframes skeletonAnimation {
+  0%   { opacity: 0.250; }
+  50%  { opacity: 0.125; }
+  100% { opacity: 0.250; }
+}
+
+.skeleton-line {
+  border: var(--bs-body-color) 0.5rem solid;
+  margin: 0 1rem;
+  border-radius: 1rem;
+  animation: skeletonAnimation 2s infinite;
+}
+
+.form-mb {
+  margin-bottom: 0.5rem;
+}
+
+/* html {
   position: relative;
   min-height: 100%;
   height: -webkit-fill-available;
@@ -38,12 +94,28 @@ body {
 
 main {
   min-height: 0;
+} */
+
+@keyframes fade-in-overlay {
+  0%   { background: rgba(0, 0, 0, 0.000); }
+  100% { background: rgba(0, 0, 0, 0.500); }
 }
 
-.container.card.flex-1 {
-  min-height: 0;
+@keyframes fade-out-overlay {
+  0%   { background: rgba(0, 0, 0, 0.500); }
+  100% { background: rgba(0, 0, 0, 0.000); }
 }
 
+@keyframes fade-in-modal {
+  0%   { transform: translateY(100vh); }
+  100% { transform: translateY(000vh); }
+}
+
+@keyframes fade-out-modal {
+  0%   { transform: translateY(000vh); }
+  100% { transform: translateY(100vh); }
+}
+ 
 .container-sm {
   max-width: 24rem;
 }

@@ -1,14 +1,7 @@
-import { FormEvent, useContext, useEffect, useState } from 'react';
-import { addDoc, collection, deleteDoc, doc, getCountFromServer, getDocs, getFirestore, limit, onSnapshot, orderBy, query, setDoc, startAfter, startAt, updateDoc, where } from 'firebase/firestore';
+import { FormEvent, useContext, useEffect, useRef, useState } from 'react';
+import { addDoc, collection, deleteDoc, doc, getFirestore, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore';
 import { Context } from '../Context';
-
-const RESULTS_PER_PAGE = 5;
-type Food = {
-  creator: string,
-  name: string,
-  kcal: number,
-  protein: number,
-}
+import { getFormValue, setFormValue } from '../utils';
 
 type Item = Food;
 type ItemDict = {
@@ -18,28 +11,17 @@ type ItemEditDict = {
   [key: string]: boolean
 };
 
-const getFormValue = (name: string, e: FormEvent<HTMLFormElement>) => {
-  const target = e.target as any;
-  return target[name].value;
-}
-
-const setFormValue = (name: string, value: any, e: FormEvent<HTMLFormElement>) => {
-  const target = e.target as any;
-  target[name].value = value;
-}
-
 const db = getFirestore();
 export const Foods = () => {
   const ctx = useContext(Context);
   const auth = ctx.auth!;
 
-  const [items, setItems] = useState<ItemDict>({});
+  const [items, setItems] = useState<ItemDict>();
   const [itemsEditing, setItemsEditing] = useState<ItemEditDict>({});
 
-  useEffect(() => {
-    console.log('Foods subscribed');
+  const tableRef = useRef<HTMLDivElement | null>(null);
 
-    console.log('uid', auth.uid);
+  useEffect(() => {
     const unsubscribe = onSnapshot(query(
       collection(db, 'foods'),
       where('creator', '==', auth.uid),
@@ -74,12 +56,14 @@ export const Foods = () => {
     const item = {
       name: getFormValue('name', e),
       creator: auth.uid,
-      kcal: getFormValue('kcal', e),
-      protein: getFormValue('protein', e),
+      valuesPer100g: {
+        energy: parseFloat(getFormValue('energy', e)),
+        protein: parseFloat(getFormValue('protein', e)),
+      },
     } as Item;
-    
+
     setFormValue('name', '', e);
-    setFormValue('kcal', 0, e);
+    setFormValue('energy', 0, e);
     setFormValue('protein', 0, e);
 
     try {
@@ -106,8 +90,10 @@ export const Foods = () => {
     const item = {
       name: getFormValue('name', e),
       creator: auth.uid,
-      kcal: getFormValue('kcal', e),
-      protein: getFormValue('protein', e),
+      valuesPer100g: {
+        energy: parseFloat(getFormValue('energy', e)),
+        protein: parseFloat(getFormValue('protein', e)),
+      },
     } as Item;
 
     setItemsEditing({
@@ -123,12 +109,17 @@ export const Foods = () => {
   }
 
   const resetItem = async (itemId: string, e: FormEvent<HTMLFormElement>) => {
+    if (!items) {
+      console.error('resetItem failed: items is undefined!');
+      return;
+    }
+
     const item = items[itemId];
 
     setFormValue('name', item.name, e);
-    setFormValue('kcal', item.kcal, e);
-    setFormValue('protein', item.protein, e);
-    
+    setFormValue('energy', item.valuesPer100g.energy, e);
+    setFormValue('protein', item.valuesPer100g.protein, e);
+
     setItemsEditing({
       ...itemsEditing,
       [itemId]: false,
@@ -139,12 +130,12 @@ export const Foods = () => {
     <>
       <h1>Foods</h1>
       <div
-        className='container card flex-1'
+        className='container card'
       >
         <div
           className='table-responsive flex'
           style={{
-            margin: '0.5rem'
+            margin: '0.5rem',
           }}
         >
           <form
@@ -185,8 +176,8 @@ export const Foods = () => {
               <tr>
                 <th>#</th>
                 <th>Name</th>
-                <th>kCalories (/100g)</th>
-                <th>% of Protein</th>
+                <th>Energy (kcal/100g)</th>
+                <th>Protein (%)</th>
                 <th></th>
                 <th></th>
               </tr>
@@ -198,6 +189,7 @@ export const Foods = () => {
                     form='new-item'
                     type='text'
                     name='name'
+                    required
                   />
                 </td>
                 <td>
@@ -206,7 +198,7 @@ export const Foods = () => {
                     form='new-item'
                     type='number'
                     step='any'
-                    name='kcal'
+                    name='energy'
                     defaultValue={0}
                   />
                 </td>
@@ -233,7 +225,34 @@ export const Foods = () => {
               </tr>
             </thead>
             <tbody>
+              { // Skeleton loading
+                !items &&
+                Object.entries([null, null, null, null, null]).map((_, index) => {
+                  return (
+                    <tr key={index}>
+                      <td></td>
+                      <td>
+                        <div className='skeleton-line'></div>
+                      </td>
+                      <td>
+                        <div className='skeleton-line'></div>
+                      </td>
+                      <td>
+                        <div className='skeleton-line'></div>
+                      </td>
+                      <td>
+                        <button className='btn' disabled style={{ visibility: 'hidden' }}>✏️</button>
+                      </td>
+                      <td>
+                        <button className='btn' disabled style={{ visibility: 'hidden' }}>🗑️</button>
+                      </td>
+                    </tr>
+                  );
+                })
+              }
+
               {
+                items &&
                 Object.entries(items).map(([itemId, item], index) => {
                   if (itemsEditing[itemId]) {
                     return (
@@ -246,6 +265,7 @@ export const Foods = () => {
                             type='text'
                             name='name'
                             defaultValue={item.name}
+                            required
                           />
                         </td>
                         <td>
@@ -254,8 +274,8 @@ export const Foods = () => {
                             form={'edit-' + itemId}
                             type='number'
                             step='any'
-                            name='kcal'
-                            defaultValue={item.kcal}
+                            name='energy'
+                            defaultValue={item.valuesPer100g.energy}
                           />
                         </td>
                         <td>
@@ -265,7 +285,7 @@ export const Foods = () => {
                             type='number'
                             step='any'
                             name='protein'
-                            defaultValue={item.protein}
+                            defaultValue={item.valuesPer100g.protein}
                           />
                         </td>
                         <td>
@@ -294,18 +314,17 @@ export const Foods = () => {
                     <tr key={itemId}>
                       <td>{index + 1}.</td>
                       <td>{item.name}</td>
-                      <td>{item.kcal}</td>
-                      <td>{item.protein}</td>
+                      <td>{item.valuesPer100g.energy}</td>
+                      <td>{item.valuesPer100g.protein}</td>
                       <td>
                         <button
                           className='btn'
                           type='button'
                           onClick={() => {
-                            const newItemsEditing = {
+                            setItemsEditing({
                               ...itemsEditing,
                               [itemId]: true,
-                            };
-                            setItemsEditing(newItemsEditing);
+                            });
                           }}
                         >
                           ✏️
@@ -315,7 +334,9 @@ export const Foods = () => {
                         <button
                           className='btn'
                           type='button'
-                          onClick={() => deleteItem(itemId)}
+                          onClick={() => {
+                            deleteItem(itemId);
+                          }}
                         >
                           🗑️
                         </button>
